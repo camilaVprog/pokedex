@@ -4,11 +4,11 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
-#include <cctype> // Necesario para tolower
+#include <cctype> // Necesario para tolower y isdigit
 
 using namespace std;
 
-// estructura / Clase para representar al pokemon
+// Estructura / Clase para representar al pokémon
 class Pokemon {
 public:
     int numero;
@@ -43,7 +43,6 @@ class Pokedex {
 private:
     vector<Pokemon> pokemones;
 
-    // Función para convertir cualquier string a minúsculas
     string aMinusculas(string str) const {
         string resultado = str;
         transform(resultado.begin(), resultado.end(), resultado.begin(),
@@ -237,7 +236,6 @@ public:
         }
     }
 
-    // 1. Ver informacion por número de la Pokédex
     void buscarPorNumero(int num) const {
         bool encontrado = false;
         for (const auto& p : pokemones) {
@@ -250,14 +248,12 @@ public:
         if (!encontrado) cout << "No se encontró ningún Pokémon con ese número " << num << "\n";
     }
 
-    // 2 y 4. Buscar por subcadena e y buscar de igual manerra sean mayúsculas o minúsculas
     void buscarPorNombre(string busqueda) const {
         string busquedaMin = aMinusculas(busqueda);
         int encontrados = 0;
 
         for (const auto& p : pokemones) {
             string nombreMin = aMinusculas(p.nombre);
-            // .find() busca si busquedaMin está contenida en nombreMin
             if (nombreMin.find(busquedaMin) != string::npos) {
                 p.mostrarInfo();
                 encontrados++;
@@ -271,7 +267,6 @@ public:
         }
     }
 
-    // 3. Ver pokémons de un tipo seleccionado (también de igual manera minúsculas o mayúsculas)
     void buscarPorTipo(string tipoBuscado) const {
         string tipoMin = aMinusculas(tipoBuscado);
         cout << "\n--- Pokémon de tipo " << tipoBuscado << " ---\n";
@@ -288,11 +283,9 @@ public:
         if (contador == 0) cout << "No hay Pokémon registrados con ese tipo.\n";
     }
 
-    // 5. Top 3 más fuertes y Top 3 más débiles
     void mostrarTopStats() const {
         vector<Pokemon> copia = pokemones;
 
-        // Ordenar de mayor a menor según 'total'
         sort(copia.begin(), copia.end(), [](const Pokemon& a, const Pokemon& b) {
             return a.total > b.total;
         });
@@ -302,7 +295,7 @@ public:
             cout << i + 1 << ". " << copia[i].nombre << " (Total Stats: " << copia[i].total << ")\n";
         }
 
-        cout << "\n=== TOP 3 POKÉMON MÁS DÉBILES  ===\n";
+        cout << "\n===== TOP 3 POKÉMON MÁS DÉBILES  =====\n";
         for (size_t i = 0; i < 3 && i < copia.size(); ++i) {
             size_t idx = copia.size() - 1 - i;
             cout << i + 1 << ". " << copia[idx].nombre << " (Total Stats: " << copia[idx].total << ")\n";
@@ -310,44 +303,72 @@ public:
     }
 };
 
+// Función segura para leer números enteros (bloquea letras, puntos, decimales y espacios vacíos)
+int leerEnteroSeguro(const string& mensaje) {
+    string entrada;
+    while (true) {
+        cout << mensaje;
+        cin >> entrada;
+
+        bool esValido = true;
+        if (entrada.empty()) {
+            esValido = false;
+        } else {
+            for (char c : entrada) {
+                // isdigit verifica si cada carácter es un número del '0' al '9'
+                if (!isdigit(static_cast<unsigned char>(c))) {
+                    esValido = false;
+                    break;
+                }
+            }
+        }
+
+        if (esValido) {
+            try {
+                return stoi(entrada); // Convierte la cadena validada a entero de manera segura
+            } catch (...) {
+                // En caso de desbordamiento u otro error de conversión
+            }
+        }
+
+        cout << "Entrada inválida. No se permiten letras, puntos, decimales ni símbolos. Intenta de nuevo.\n";
+    }
+}
+
 int main() {
     Pokedex pokedex;
     int opcion;
 
     do {
         cout << "\n===============================\n";
-        cout << "       MENÚ POKÉDEX (C++)      \n";
+        cout << "        MENÚ POKÉDEX           \n";
         cout << "===============================\n";
         cout << "1. Ver info de Pokémon por número\n";
         cout << "2. Ver/Buscar Pokémon por nombre (3 o más letras)\n";
         cout << "3. Ver Pokémon por tipo\n";
         cout << "4. Ver Top 3 más fuertes y débiles\n";
         cout << "5. Salir\n";
-        cout << "Elige una opción: ";
-        if (!(cin >> opcion)) { // Limpiar flujo de entrada en caso de ingresar texto en la opción
-            cin.clear();
-            cin.ignore(1000, '\n');
-            continue;
-        }
+
+        // Usamos la función segura para evitar que ingresen letras o decimales en el menú
+        opcion = leerEnteroSeguro("Elige una opción: ");
 
         switch (opcion) {
             case 1: {
-                int num;
-                cout << "Ingresa el número de Pokedex: ";
-                cin >> num;
+                // Usamos la misma función para pedir el número del Pokédex de forma segura
+                int num = leerEnteroSeguro("Ingresa el número de Pokedex: ");
                 pokedex.buscarPorNumero(num);
                 break;
             }
             case 2: {
                 string nombre;
-                cout << "Ingresa el nombre o fragmento ( por ejemplo. cha, pika, CHAR): ";
+                cout << "Ingresa el nombre o fragmento (por ejemplo: cha, pika, CHAR): ";
                 cin >> nombre;
                 pokedex.buscarPorNombre(nombre);
                 break;
             }
             case 3: {
                 string tipo;
-                cout << "Ingresa el tipo (por ejemplo. fire, WATER, grass, bug...): ";
+                cout << "Ingresa el tipo (por ejemplo: fire, WATER, grass, bug...): ";
                 cin >> tipo;
                 pokedex.buscarPorTipo(tipo);
                 break;
@@ -359,7 +380,7 @@ int main() {
                 cout << "¡Saliendo de la Pokédex! Hasta luego.\n";
                 break;
             default:
-                cout << "Opción inválida. Intenta de nuevo.\n";
+                cout << "Opción inválida. Debe ser un número del 1 al 5.\n";
         }
     } while (opcion != 5);
 
